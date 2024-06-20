@@ -6,8 +6,8 @@ import { Login } from "./components/Login";
 import { Prompt } from "./components/Prompt";
 
 function App() {
-  const { showPrompt } = appApi;
-  const { getRemainingTime, start } = useIdleTimer({
+  const { showPrompt, onMessage } = appApi;
+  const { getRemainingTime, message, activate } = useIdleTimer({
     name: "session-idle-timer",
     crossTab: true,
     syncTimers,
@@ -22,9 +22,12 @@ function App() {
     onActive: () => {
       console.log("onActive");
     },
+    onMessage: (e) => {
+      onMessage(e);
+    },
   });
 
-  appApi.setIdleTimeApi({ getRemainingTime, start });
+  appApi.setIdleTimeApi({ getRemainingTime, activate, message });
 
   return (
     <>

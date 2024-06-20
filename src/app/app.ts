@@ -1,18 +1,28 @@
 import { createStore } from "outer-state";
-import { promptBeforeIdle, promptMs, timeout, timeoutMs } from "./constants";
+import {
+  loggedinLskey,
+  promptBeforeIdle,
+  promptMs,
+  timeout,
+} from "./constants";
+
+interface MessageData {
+  sessionRenewed: boolean;
+  loggedOut: boolean;
+}
 
 type miliseconds = number;
 
 interface IdleTimerSubset {
   getRemainingTime: () => miliseconds;
-  start: () => boolean;
+  activate: () => boolean;
+  message: (data: MessageData) => void;
 }
 
 interface AppStore {
   msRemainingUntilLogout: number;
   msRemainingUntilPrompt: number;
   prompt: boolean;
-  loggedin: boolean;
 }
 
 const defaultsecondsRemainingUntilLogout = timeout;
@@ -21,69 +31,74 @@ const defaultSecondsRemainingUntilPrompt = promptBeforeIdle;
 export const appStore = createStore<AppStore>({
   msRemainingUntilLogout: defaultsecondsRemainingUntilLogout,
   msRemainingUntilPrompt: defaultSecondsRemainingUntilPrompt,
-  loggedin: false,
   prompt: false,
 });
 const { data, updateStore } = appStore;
 
 export const appApi = appApiFn();
 
+if (localStorage.getItem(loggedinLskey) !== "true") {
+  window.location.href = "/login";
+}
+
 function appApiFn() {
-  const idleTimerApi = {
+  const idleTimerApi: IdleTimerSubset = {
     getRemainingTime: () => 0,
-    start: () => true,
+    activate: () => true,
+    message: (data: MessageData) => {},
   };
 
   tick();
 
   return {
     setIdleTimeApi,
-    login,
     logout,
     showPrompt,
     extendSesion,
+    onMessage,
   };
+
+  function onMessage(data: MessageData) {
+    if (data.loggedOut) {
+      window.location.href = "/login";
+    } else if (data.sessionRenewed) {
+      updateStore({ prompt: false });
+    }
+  }
 
   function showPrompt() {
     updateStore({ prompt: true });
   }
 
   function extendSesion() {
-    idleTimerApi.start();
+    idleTimerApi.activate();
     updateStore({ prompt: false });
-  }
-
-  function login() {
-    updateStore({
-      loggedin: true,
-      prompt: false,
-      msRemainingUntilLogout: defaultsecondsRemainingUntilLogout,
-      msRemainingUntilPrompt: defaultSecondsRemainingUntilPrompt,
-    });
+    idleTimerApi.message({ loggedOut: false, sessionRenewed: true });
   }
 
   function logout() {
-    updateStore({
-      loggedin: false,
-      prompt: false,
-      msRemainingUntilLogout: defaultsecondsRemainingUntilLogout,
-      msRemainingUntilPrompt: defaultSecondsRemainingUntilPrompt,
-    });
+    localStorage.removeItem(loggedinLskey);
+    idleTimerApi.message({ loggedOut: true, sessionRenewed: false });
+    window.location.href = "/login";
   }
 
-  function setIdleTimeApi({ getRemainingTime, start }: IdleTimerSubset) {
+  function setIdleTimeApi({
+    getRemainingTime,
+    activate,
+    message,
+  }: IdleTimerSubset) {
     idleTimerApi.getRemainingTime = getRemainingTime;
-    idleTimerApi.start = start;
+    idleTimerApi.activate = activate;
+    idleTimerApi.message = message;
   }
 
   function tick() {
     setInterval(() => {
-      if (data().loggedin) {
-        whenLoggedIn();
-      }
+      countdown();
+      handleTimedout();
     }, 1000);
 
-    function whenLoggedIn() {
+    function countdown() {
       const msToLogout = idleTimerApi.getRemainingTime();
       const delta = msToLogout - promptMs;
       const msToPrompt = delta > 0 ? delta : 0;
@@ -91,6 +106,12 @@ function appApiFn() {
         msRemainingUntilLogout: msToLogout,
         msRemainingUntilPrompt: msToPrompt,
       });
+    }
+
+    function handleTimedout() {
+      if (data().msRemainingUntilLogout <= 0) {
+        logout();
+      }
     }
   }
 }

@@ -5,3 +5,5 @@ export const promptMs = 15 * 1000;
 export const syncTimers = 200;
 export const timeout = timeoutMs;
 export const promptBeforeIdle = timeout - promptMs;
+
+export const loggedinLskey = "loggedin";
