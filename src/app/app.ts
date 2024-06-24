@@ -4,6 +4,7 @@ import {
   promptBeforeIdle,
   promptMs,
   timeout,
+  timeoutMs,
 } from "./constants";
 
 interface MessageData {
@@ -41,6 +42,10 @@ if (localStorage.getItem(loggedinLskey) !== "true") {
   window.location.href = "/login";
 }
 
+// onActive is what i need to initiate the logout
+// as for the debounced api call to keep the session alive... that's manual
+// shoudl be able to debounce it every time the timer is reset
+
 function appApiFn() {
   const idleTimerApi: IdleTimerSubset = {
     getRemainingTime: () => 0,
@@ -49,6 +54,9 @@ function appApiFn() {
   };
 
   tick();
+  setTimeout(() => {
+    idleTimerApi.message({ sessionRenewed: true, loggedOut: false });
+  }, 2000);
 
   return {
     setIdleTimeApi,

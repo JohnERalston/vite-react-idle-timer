@@ -7,8 +7,9 @@ function login() {
 
 export const LoginApp = () => {
   return (
-    <div className="mt-16">
-      <button className="btn btn-outline" onClick={login}>
+    <div className="mt-16 mx-10 text-center">
+      <h1 className="mb-10">This is onehealthcare</h1>
+      <button className="btn btn-outline w-full" onClick={login}>
         Login
       </button>
     </div>

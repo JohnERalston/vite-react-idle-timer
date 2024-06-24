@@ -6,11 +6,11 @@ export const Prompt = () => {
 
   if (prompt) {
     return (
-      <div className="card w-7/12 mt-12 bg-neutral text-neutral-content">
+      <div className="card w-7/12 mt-12 bg-neutral text-neutral-content shadow-2xl">
         <div className="card-body items-center text-center">
-          <h2 className="card-title">session expiry</h2>
-          <p>yoyr session will soon expire</p>
-          <div className="card-actions justify-end">
+          <h2 className="card-title mb-5">session expiry</h2>
+          <p>your session will soon expire</p>
+          <div className="card-actions justify-end mt-5">
             <button className="btn btn-primary" onClick={extendSesion}>
               Keep me logged in
             </button>
