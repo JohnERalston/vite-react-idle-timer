@@ -25,6 +25,13 @@ function App() {
     onMessage: (e) => {
       onMessage(e);
     },
+    onPresenceChange: (e) => {
+      console.log("on presence change");
+    },
+    onAction: (e) => {
+      console.log("on action");
+    },
+    debounce: 5000, //debounces the onAction
   });
 
   appApi.setIdleTimeApi({ getRemainingTime, activate, message });
